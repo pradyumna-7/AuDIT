@@ -1,0 +1,42 @@
+[
+    {
+        "path": "/users",
+        "methods": [
+            "GET"
+        ],
+        "function_name": "get_users",
+        "docstring": "Retrieve a list of users."
+    },
+    {
+        "path": "/users/<int:user_id>",
+        "methods": [
+            "GET"
+        ],
+        "function_name": "get_user",
+        "docstring": "Retrieve details of a specific user."
+    },
+    {
+        "path": "/users",
+        "methods": [
+            "POST"
+        ],
+        "function_name": "create_user",
+        "docstring": "Create a new user."
+    },
+    {
+        "path": "/users/<int:user_id>",
+        "methods": [
+            "PUT"
+        ],
+        "function_name": "update_user",
+        "docstring": "Update details of an existing user."
+    },
+    {
+        "path": "/users/<int:user_id>",
+        "methods": [
+            "DELETE"
+        ],
+        "function_name": "delete_user",
+        "docstring": "Delete an existing user."
+    }
+]

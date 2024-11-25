@@ -1,13 +1,14 @@
 import json
+import subprocess
 from jinja2 import Environment, FileSystemLoader
 import openai
 import os
-from dotenv import load_dotenv
+import sys
 
+from dotenv import load_dotenv
 load_dotenv()
 
-# Set up GPT API Key (store securely as an environment variable)
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Set in GitHub secrets or .env file
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 class DocumentationGenerator:
     def __init__(self, template_dir="templates"):
@@ -28,7 +29,7 @@ class DocumentationGenerator:
         """
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-4o",  # Use the specific GPT model
+                model="gpt-4-0613",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant for generating API documentation."},
                     {"role": "user", "content": prompt},
@@ -46,11 +47,11 @@ class DocumentationGenerator:
         Generate documentation by enhancing route descriptions with GPT and rendering HTML.
         """
         for route in routes:
-            if not route.get("docstring"):  # If no description exists, call GPT
+            if not route.get("docstring"):
                 route["docstring"] = self.call_gpt(route)
 
         # Render HTML
-        template = self.env.get_template("swagger_template.html")
+        template = self.env.get_template("template.html")  # Corrected path
         html_content = template.render(routes=routes)
 
         # Write HTML to file
@@ -60,11 +61,49 @@ class DocumentationGenerator:
         print(f"Documentation generated at {output_file}")
 
 
-if __name__ == "__main__":
-    # Load routes
-    with open("routes.json", "r") as f:
-        routes = json.load(f)
+def run_parsers(flask_files, node_files):
+    """
+    Run Flask and Node.js parsers on specified files.
+    """
+    routes = []
 
-    # Generate documentation
+    if flask_files:
+        # Run Flask parser
+        subprocess.run(["python", "utils/flask_parser.py"] + flask_files, check=True)
+
+    if node_files:
+        # Run Node.js parser
+        subprocess.run(["node", "nodejs_parser.js"] + node_files, check=True)
+
+    # Load parsed routes from routes.json if it exists
+    if os.path.exists("routes.json"):
+        with open("routes.json", "r") as f:
+            routes = json.load(f)
+
+    return routes
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python generate_docs.py <flask_file1.py> ... [--node <node_file1.js> ...]")
+        sys.exit(1)
+
+    flask_files = []
+    node_files = []
+
+    # Separate Flask and Node.js files based on `--node` delimiter
+    if '--node' in sys.argv:
+        split_index = sys.argv.index('--node')
+        flask_files = sys.argv[1:split_index]
+        node_files = sys.argv[split_index + 1:]
+    else:
+        flask_files = sys.argv[1:]
+
+    if not flask_files and not node_files:
+        print("No files provided. Specify at least one Flask or Node.js file.")
+        sys.exit(1)
+
+    # Run parsers and generate docs
+    routes = run_parsers(flask_files, node_files)
     generator = DocumentationGenerator()
     generator.generate(routes)
