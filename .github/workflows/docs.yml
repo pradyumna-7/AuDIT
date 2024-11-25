@@ -1,0 +1,62 @@
+name: Update Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Install dependencies
+      run: |
+        pip install jinja2
+        npm install esprima
+
+    - name: Generate Documentation
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        python flask_parser.py
+        node nodejs_parser.js
+        python generate_docs.py
+
+
+    - name: Check for gh-pages branch
+      run: |
+        git fetch
+        if git show-ref --quiet refs/heads/gh-pages; then
+          echo "gh-pages branch exists."
+        else
+          echo "gh-pages branch does not exist. Creating it."
+          git checkout --orphan gh-pages
+          git rm -rf .
+          echo "Initializing gh-pages branch" > README.md
+          git add README.md
+          git commit -m "Initialize gh-pages branch"
+          git push origin gh-pages
+        fi
+
+    - name: Deploy to GitHub Pages
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "actions@github.com"
+        git checkout gh-pages
+        cp -r docs/* . # Copy generated docs to root
+        if git diff --quiet; then
+          echo "No changes detected, skipping commit."
+        else
+          git add .
+          git commit -m "Update API Docs"
+          git push origin gh-pages
+        fi

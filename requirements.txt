@@ -1,0 +1,12 @@
+# For Flask route parsing
+jinja2==3.1.2
+astunparse==1.6.3
+
+# For environment variable handling
+python-dotenv==1.0.0
+
+# For GPT integration
+openai==0.27.8
+
+# Optional (for robust Flask parsing, if needed)
+Flask==2.3.3

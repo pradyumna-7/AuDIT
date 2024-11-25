@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>API Documentation</h1>
+    <ul>
+        {% for route in routes %}
+        <li>
+            <h2>{{ route['path'] }}</h2>
+            <p><strong>Methods:</strong> {{ route['methods'] | join(', ') }}</p>
+            <p><strong>Description:</strong> {{ route['docstring'] }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
